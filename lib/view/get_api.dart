@@ -1,77 +1,163 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:gallery_apps/api/get_user.dart';
 import 'package:gallery_apps/model/cat_gallery.dart';
 
-class Day23GetAPIScreen extends StatefulWidget {
-  const Day23GetAPIScreen({super.key});
+class DashboardPage extends StatefulWidget {
+  const DashboardPage({super.key});
   static const id = "/get_api_screen";
 
   @override
-  State<Day23GetAPIScreen> createState() => _Day23GetAPIScreenState();
+  State<DashboardPage> createState() => _DashboardPageState();
 }
 
-class _Day23GetAPIScreenState extends State<Day23GetAPIScreen> {
+class _DashboardPageState extends State<DashboardPage> {
+  late Future<CatGallery> _futureGallery;
+
+  @override
+  void initState() {
+    super.initState();
+    _futureGallery = getCatGallery();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(""),
+        title: const Text("Cat Gallery"),
         backgroundColor: Colors.black,
       ),
       backgroundColor: Colors.black,
       body: FutureBuilder<CatGallery>(
-        future: getCatGallery(),
-        builder: (BuildContext context, AsyncSnapshot<CatGallery> snapshot) {
+        future: _futureGallery,
+        builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return const Center(
+              child: Text(
+                "Gagal memuat data",
+                style: TextStyle(color: Colors.white),
+              ),
+            );
           } else if (snapshot.hasData) {
             final gallery = snapshot.data!;
-            return Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Text(
-                    gallery.greeting ?? "",
-                    style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white),
-                  ),
+            final photos = gallery.photos ?? [];
+
+            if (photos.isEmpty) {
+              return const Center(
+                child: Text(
+                  "Tidak ada gambar",
+                  style: TextStyle(color: Colors.white),
                 ),
-                Expanded(
-                  child: GridView.builder(
-                    padding: EdgeInsets.all(8),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3, // 3 kolom, mirip iPhone gallery
-                      crossAxisSpacing: 4,
-                      mainAxisSpacing: 4,
-                    ),
-                    itemCount: gallery.photos?.length ?? 0,
-                    itemBuilder: (BuildContext context, int index) {
-                      final photo = gallery.photos![index];
-                      return GestureDetector(
-                        onTap: () {
-                          // Bisa nambah navigasi ke detail screen nanti
-                        },
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
+              );
+            }
+
+            return MasonryGridView.count(
+              crossAxisCount: 2,
+              mainAxisSpacing: 8,
+              crossAxisSpacing: 8,
+              padding: const EdgeInsets.all(8),
+              itemCount: photos.length,
+              itemBuilder: (context, index) {
+                final photo = photos[index];
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Stack(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
                           child: Image.network(
-                            photo.url ?? "https://via.placeholder.com/150",
+                            photo.url ?? "",
                             fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: 200,
+                            loadingBuilder:
+                                (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return const Center(
+                                  child: CircularProgressIndicator());
+                            },
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                height: 200,
+                                color: Colors.grey[800],
+                                child: const Icon(Icons.error,
+                                    color: Colors.red),
+                              );
+                            },
                           ),
                         ),
-                      );
-                    },
-                  ),
-                ),
-              ],
+                        Positioned(
+                          right: 8,
+                          bottom: 8,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.black54,
+                              shape: BoxShape.circle,
+                            ),
+                            child: IconButton(
+                              icon: const Icon(Icons.more_vert,
+                                  color: Colors.white, size: 20),
+                              onPressed: () {
+                                showModalBottomSheet(
+                                  context: context,
+                                  builder: (context) {
+                                    return SizedBox(
+                                      height: 120,
+                                      child: Column(
+                                        children: [
+                                          ListTile(
+                                            leading:
+                                                const Icon(Icons.download),
+                                            title: const Text("Download"),
+                                            onTap: () =>
+                                                Navigator.pop(context),
+                                          ),
+                                          ListTile(
+                                            leading: const Icon(Icons.share),
+                                            title: const Text("Share"),
+                                            onTap: () =>
+                                                Navigator.pop(context),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    if (photo.title != null)
+                      Text(
+                        photo.title!,
+                        style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white),
+                      ),
+                    if (photo.description != null)
+                      Text(
+                        photo.description!,
+                        style: const TextStyle(
+                            fontSize: 14, color: Colors.white70),
+                      ),
+                  ],
+                );
+              },
             );
           } else {
-            return Center(
-                child: Text(
-              "Gagal memuat data",
-              style: TextStyle(color: Colors.white),
-            ));
+            return const Center(
+              child: Text(
+                "Data tidak tersedia",
+                style: TextStyle(color: Colors.white),
+              ),
+            );
           }
         },
       ),
