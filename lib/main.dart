@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:gallery_apps/view/get_api.dart';
+import 'package:gallery_apps/utils/app_theme.dart';
+import 'package:gallery_apps/view/dashboard_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -11,8 +12,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
+      title: 'Gallery Apps',
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.system,
       home: const DashboardPage(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }

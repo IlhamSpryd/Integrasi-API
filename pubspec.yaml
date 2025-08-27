@@ -1,6 +1,6 @@
 name: gallery_apps
 description: "A Flutter project for Cat Gallery with Staggered Grid"
-publish_to: 'none'
+publish_to: "none"
 version: 1.0.0+1
 
 environment:
@@ -24,11 +24,11 @@ flutter:
   assets:
     - assets/images/placeholder.png
 
-  fonts:
-    - family: Roboto
-      fonts:
-        - asset: assets/fonts/Roboto-Regular.ttf
-        - asset: assets/fonts/Roboto-Bold.ttf
-          weight: 700
-        - asset: assets/fonts/Roboto-Italic.ttf
-          style: italic
+  # fonts:
+  #   - family: Roboto
+  #     fonts:
+  #       - asset: assets/fonts/Roboto-Regular.ttf
+  #       - asset: assets/fonts/Roboto-Bold.ttf
+  #         weight: 700
+  #       - asset: assets/fonts/Roboto-Italic.ttf
+  #         style: italic
