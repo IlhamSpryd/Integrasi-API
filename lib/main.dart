@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:gallery_apps/utils/app_theme.dart';
-import 'package:gallery_apps/view/dashboard_page.dart';
+import 'package:gallery_apps/view/login_page.dart';
+
 
 void main() {
   runApp(const MyApp());
@@ -12,12 +12,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Gallery Apps',
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
-      home: const DashboardPage(),
-      debugShowCheckedModeBanner: false,
+      title: 'Full Flow App',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        colorScheme: ColorScheme.fromSwatch().copyWith(surface: Colors.white),
+      ),
+      home: const LoginPage(),
     );
   }
 }

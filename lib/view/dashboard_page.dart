@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:gallery_apps/model/photo_model.dart';
 import 'package:gallery_apps/services/photo_services.dart';
+import 'package:gallery_apps/widgets/custom_navbar.dart';
 import 'package:gallery_apps/widgets/photo_card.dart';
 
 class DashboardPage extends StatefulWidget {
@@ -12,10 +13,14 @@ class DashboardPage extends StatefulWidget {
   State<DashboardPage> createState() => _DashboardPageState();
 }
 
-class _DashboardPageState extends State<DashboardPage> {
+class _DashboardPageState extends State<DashboardPage>
+    with SingleTickerProviderStateMixin {
   late Future<List<Photo>> _futurePhotos;
   List<Photo> _allPhotos = [];
   String _selectedFilter = "All";
+
+  int _currentIndex = 0;
+  late PageController _pageController;
 
   final List<String> _filters = ["All", "Cat", "Ghibli", "Game Of Thrones"];
 
@@ -23,6 +28,22 @@ class _DashboardPageState extends State<DashboardPage> {
   void initState() {
     super.initState();
     _futurePhotos = PhotoService.fetchAllPhotos();
+    _pageController = PageController(initialPage: _currentIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _onTap(int index) {
+    setState(() => _currentIndex = index);
+    _pageController.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
   }
 
   List<Photo> _getFilteredPhotos() {
@@ -66,6 +87,38 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
+  Widget _buildHomePage() {
+    final photos = _getFilteredPhotos();
+    return SafeArea(
+      child: Column(
+        children: [
+          _buildFilterChips(context),
+          Expanded(
+            child: MasonryGridView.count(
+              crossAxisCount: 2,
+              mainAxisSpacing: 8,
+              crossAxisSpacing: 8,
+              padding: const EdgeInsets.all(8),
+              itemCount: photos.length,
+              itemBuilder: (context, index) {
+                return PhotoCard(photo: photos[index]);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProfilePage() {
+    return const Center(
+      child: Text(
+        "Profile Page",
+        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -83,28 +136,17 @@ class _DashboardPageState extends State<DashboardPage> {
           }
 
           if (_allPhotos.isEmpty) _allPhotos = snapshot.data!;
-          final photos = _getFilteredPhotos();
 
-          return SafeArea(
-            child: Column(
-              children: [
-                _buildFilterChips(context),
-                Expanded(
-                  child: MasonryGridView.count(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 8,
-                    crossAxisSpacing: 8,
-                    padding: const EdgeInsets.all(8),
-                    itemCount: photos.length,
-                    itemBuilder: (context, index) {
-                      return PhotoCard(photo: photos[index]);
-                    },
-                  ),
-                ),
-              ],
-            ),
+          return PageView(
+            controller: _pageController,
+            physics: const NeverScrollableScrollPhysics(),
+            children: [_buildHomePage(), _buildProfilePage()],
           );
         },
+      ),
+      bottomNavigationBar: CustomNavBar(
+        currentIndex: _currentIndex,
+        onTap: _onTap,
       ),
     );
   }
