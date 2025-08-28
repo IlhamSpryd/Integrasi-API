@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gallery_apps/view/login_page.dart';
 
-
 void main() {
   runApp(const MyApp());
 }
@@ -12,12 +11,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Full Flow App',
+      debugShowCheckedModeBanner: false,
+      title: 'Gallerry App',
       theme: ThemeData(
         primarySwatch: Colors.blue,
         colorScheme: ColorScheme.fromSwatch().copyWith(surface: Colors.white),
       ),
-      home: const LoginPage(),
+      home: const LoginScreen(),
     );
   }
 }
