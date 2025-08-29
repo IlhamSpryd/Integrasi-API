@@ -1,111 +1,259 @@
 import 'package:flutter/material.dart';
-import '../widgets/custom_textfield.dart';
-import 'dashboard_page.dart';
+import 'package:gallery_apps/extension/navigation.dart';
+import 'package:gallery_apps/model/register.dart';
+import 'package:gallery_apps/preferences/shared_preferences.dart';
+import 'package:gallery_apps/services/authentication_api.dart';
+import 'package:gallery_apps/view/login_page.dart';
 
-class RegisterPage extends StatefulWidget {
-  const RegisterPage({super.key});
-  static const id = "/register";
+class PostApiScreen extends StatefulWidget {
+  const PostApiScreen({super.key});
+  static const id = '/Register';
 
   @override
-  State<RegisterPage> createState() => _RegisterPageState();
+  State<PostApiScreen> createState() => _PostApiScreenState();
 }
 
-class _RegisterPageState extends State<RegisterPage> {
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController =
-      TextEditingController();
-  bool _isLoading = false;
+class _PostApiScreenState extends State<PostApiScreen> {
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
 
-  void _register() {
-    final name = _nameController.text;
-    final email = _emailController.text;
-    final password = _passwordController.text;
-    final confirmPassword = _confirmPasswordController.text;
+  RegisterUserModel? user;
+  String? errorMessage;
+  bool isVisibility = false;
+  bool isLoading = false;
 
-    if (name.isEmpty ||
-        email.isEmpty ||
-        password.isEmpty ||
-        confirmPassword.isEmpty) {
+  /// ------------------- REGISTER FUNCTION -------------------
+  void registerUser() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
+
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+    final name = nameController.text.trim();
+
+    if (email.isEmpty || password.isEmpty || name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Email, Password, dan Nama tidak boleh kosong"),
+        ),
+      );
+      setState(() => isLoading = false);
+      return;
+    }
+
+    try {
+      final result = await AuthenticationAPI.registerUser(
+        email: email,
+        password: password,
+        name: name,
+      );
+
+      setState(() => user = result);
+
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("Semua field wajib diisi")));
-      return;
-    }
+      ).showSnackBar(const SnackBar(content: Text("Pendaftaran berhasil")));
 
-    if (password != confirmPassword) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Password dan konfirmasi tidak cocok")),
-      );
-      return;
-    }
+      PreferenceHandler.saveToken(user?.data?.token.toString() ?? "");
+      context.push(const LoginPage());
 
-    setState(() => _isLoading = true);
+      print(user?.toJson());
+    } catch (e) {
+      print(e);
+      setState(() => errorMessage = e.toString());
 
-    Future.delayed(const Duration(seconds: 2), () {
-      setState(() => _isLoading = false);
-      Navigator.pushReplacement(
+      ScaffoldMessenger.of(
         context,
-        MaterialPageRoute(builder: (_) => const DashboardPage()),
-      );
-    });
+      ).showSnackBar(SnackBar(content: Text(errorMessage.toString())));
+    } finally {
+      setState(() => isLoading = false);
+    }
   }
 
+  /// ------------------- UI LAYER -------------------
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
+    return Scaffold(body: Stack(children: [buildBackground(), buildLayer()]));
+  }
+
+  SafeArea buildLayer() {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Text(
                 "Register",
-                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 32),
-              CustomTextField(hintText: "Name", controller: _nameController),
-              const SizedBox(height: 16),
-              CustomTextField(hintText: "Email", controller: _emailController),
-              const SizedBox(height: 16),
-              CustomTextField(
-                hintText: "Password",
-                isPassword: true,
-                controller: _passwordController,
-              ),
-              const SizedBox(height: 16),
-              CustomTextField(
-                hintText: "Confirm Password",
-                isPassword: true,
-                controller: _confirmPasswordController,
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _register,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text("Register"),
+                style: TextStyle(
+                  fontSize: 25,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
               ),
-              const SizedBox(height: 16),
+              height(24),
+
+              /// EMAIL
+              buildTitle("Email"),
+              height(12),
+              buildTextField(
+                hintText: "Enter your email",
+                controller: emailController,
+              ),
+              height(16),
+
+              /// NAME
+              buildTitle("Name"),
+              height(12),
+              buildTextField(
+                hintText: "Enter your name",
+                controller: nameController,
+              ),
+              height(16),
+
+              /// PASSWORD
+              buildTitle("Password"),
+              height(12),
+              buildTextField(
+                hintText: "Enter your password",
+                isPassword: true,
+                controller: passwordController,
+              ),
+              height(12),
+
+              /// FORGOT PASSWORD
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () {},
+                  child: const Text(
+                    "Forgot Password?",
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: Colors.orange,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              height(24),
+
+              /// BUTTON DAFTAR
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: registerUser,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(50),
+                    ),
+                  ),
+                  child: isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text(
+                          "Daftar",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                ),
+              ),
+              height(16),
               TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("Sudah punya akun? Login"),
+                onPressed: () {
+                  Navigator.pushNamed(context, "/Login");
+                },
+                child: const Text(
+                  "Already have an account? Sign in",
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  /// ------------------- BACKGROUND -------------------
+  Container buildBackground() {
+    return Container(
+      height: double.infinity,
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage("assets/images/background.jpg"),
+          fit: BoxFit.cover,
+        ),
+      ),
+      child: Container(color: Colors.black.withOpacity(0.5)),
+    );
+  }
+
+  /// ------------------- TEXT FIELD -------------------
+  TextField buildTextField({
+    String? hintText,
+    bool isPassword = false,
+    TextEditingController? controller,
+  }) {
+    return TextField(
+      controller: controller,
+      obscureText: isPassword ? isVisibility : false,
+      style: const TextStyle(color: Colors.white),
+      cursorColor: Colors.white,
+      decoration: InputDecoration(
+        hintText: hintText,
+        hintStyle: const TextStyle(color: Colors.white70),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(32),
+          borderSide: BorderSide(
+            color: Colors.white.withOpacity(0.2),
+            width: 1.0,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(50),
+          borderSide: const BorderSide(color: Colors.white, width: 1.0),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(32),
+          borderSide: BorderSide(
+            color: Colors.white.withOpacity(0.2),
+            width: 1.0,
+          ),
+        ),
+        suffixIcon: isPassword
+            ? IconButton(
+                onPressed: () {
+                  setState(() => isVisibility = !isVisibility);
+                },
+                icon: Icon(
+                  isVisibility ? Icons.visibility_off : Icons.visibility,
+                  color: Colors.white,
+                ),
+              )
+            : null,
+      ),
+    );
+  }
+
+  /// ------------------- HELPERS -------------------
+  SizedBox height(double h) => SizedBox(height: h);
+  SizedBox width(double w) => SizedBox(width: w);
+
+  Widget buildTitle(String text) {
+    return Row(
+      children: [
+        Text(text, style: const TextStyle(fontSize: 12, color: Colors.white70)),
+      ],
     );
   }
 }

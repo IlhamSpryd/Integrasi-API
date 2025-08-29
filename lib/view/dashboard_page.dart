@@ -144,7 +144,7 @@ class _DashboardPageState extends State<DashboardPage>
           );
         },
       ),
-      bottomNavigationBar: CustomNavBar(
+      bottomNavigationBar: CustomNavbar(
         currentIndex: _currentIndex,
         onTap: _onTap,
       ),

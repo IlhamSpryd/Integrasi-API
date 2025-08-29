@@ -19,6 +19,9 @@ class LoginModel {
       LoginModel(message: json["message"], data: Data.fromJson(json["data"]));
 
   Map<String, dynamic> toJson() => {"message": message, "data": data.toJson()};
+
+  String get token => data.token;
+  User get user => data.user;
 }
 
 class Data {

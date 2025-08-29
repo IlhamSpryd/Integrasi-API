@@ -1,23 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:gallery_apps/view/dashboard_page.dart';
 import 'package:gallery_apps/view/login_page.dart';
+import 'package:gallery_apps/view/register_page.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const GalleryApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class GalleryApp extends StatelessWidget {
+  const GalleryApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      title: 'Gallery Apps',
       debugShowCheckedModeBanner: false,
-      title: 'Gallerry App',
+      initialRoute: LoginPage.id,
+      routes: {
+        LoginPage.id: (context) => const LoginPage(),
+        PostApiScreen.id: (context) => const PostApiScreen(),
+        DashboardPage.id: (context) => const DashboardPage(),
+      },
       theme: ThemeData(
-        primarySwatch: Colors.blue,
-        colorScheme: ColorScheme.fromSwatch().copyWith(surface: Colors.white),
+        scaffoldBackgroundColor: Colors.black,
+        primaryColor: Colors.orangeAccent,
+        colorScheme: ColorScheme.fromSwatch().copyWith(
+          secondary: Colors.orangeAccent,
+        ),
       ),
-      home: const LoginScreen(),
     );
   }
 }

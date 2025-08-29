@@ -25,6 +25,8 @@ flutter:
 
   assets:
     - assets/images/placeholder.png
+    - assets/images/background.jpg
+    - assets/images/google.png
 
   # fonts:
   #   - family: Roboto
